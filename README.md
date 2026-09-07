@@ -21,6 +21,23 @@ Reports are written to `./reports`. Use `--output DIR` to choose another
 directory. `--no-public-ip` omits public-IP lookup entirely. Do not publish a
 report before reviewing it.
 
+## One-command run
+
+Use a pipe when elevating with `sudo`; process substitution such as
+`sudo bash <(curl ...)` can lose access to `/dev/fd/*` across the sudo boundary.
+
+```bash
+SCRIPT_URL="https://raw.githubusercontent.com/clamttsy-byte/vps-inspector/main/vps-inspector.sh"
+curl -fsSL "$SCRIPT_URL" | sudo bash -s -- --output /root/vps-report
+```
+
+To omit the public-IP lookup:
+
+```bash
+SCRIPT_URL="https://raw.githubusercontent.com/clamttsy-byte/vps-inspector/main/vps-inspector.sh"
+curl -fsSL "$SCRIPT_URL" | sudo bash -s -- --no-public-ip --output /root/vps-report
+```
+
 ## Exit status
 
 - `0`: report generated
