@@ -4,7 +4,10 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 script="$root/vps-inspector.sh"
 test -x "$script"
 "$script" --help | grep -q "read-only"
-! grep -Eiq 'apt(-get)? +install|systemctl +(stop|restart|disable)|reboot|shutdown|rm +-rf|curl.*--upload|scp ' "$script"
+if grep -Eiq 'apt(-get)? +install|systemctl +(stop|restart|disable)|reboot|shutdown|rm +-rf|curl.*--upload|scp ' "$script"; then
+  echo "Unsafe command found" >&2
+  exit 1
+fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 "$script" --output "$tmp" --no-public-ip
@@ -14,5 +17,8 @@ test -s "$md"
 test -s "$json"
 grep -q '^# VPS Inspection Report' "$md"
 python3 -m json.tool "$json" >/dev/null
-! grep -Eq 'BEGIN (RSA |OPENSSH )?PRIVATE KEY|gh[opsu]_[A-Za-z0-9]+' "$tmp"/*
+if grep -Eq 'BEGIN (RSA |OPENSSH )?PRIVATE KEY|gh[opsu]_[A-Za-z0-9]+' "$tmp"/*; then
+  echo "Sensitive material found in report" >&2
+  exit 1
+fi
 echo "All tests passed"

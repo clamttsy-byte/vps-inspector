@@ -47,7 +47,8 @@ json_escape() {
   printf '%s' "$value"
 }
 
-os="$(. /etc/os-release 2>/dev/null; printf '%s' "${PRETTY_NAME:-unknown}")"
+os="$(awk -F= '$1 == "PRETTY_NAME" {value=$2; gsub(/^\"|\"$/, "", value); print value; exit}' /etc/os-release 2>/dev/null || true)"
+os="${os:-unknown}"
 arch="$(command_text unknown uname -m)"
 kernel="$(command_text unknown uname -r)"
 cpu="$(command_text unknown nproc)"
@@ -111,16 +112,16 @@ trap 'rm -f "$tmp_md" "$tmp_json"' EXIT
   printf -- '- Git: %s\n- Docker: %s\n- Compose: %s\n- Caddy: %s\n- Nginx: %s\n' "$git_v" "$docker_v" "$compose_v" "$caddy_v" "$nginx_v"
   echo
   echo "## Findings"
-  for finding in "${findings[@]}"; do IFS='|' read -r severity id message <<<"$finding"; printf -- '- **%s** `%s`: %s\n' "$severity" "$id" "$message"; done
+  for finding in "${findings[@]}"; do IFS='|' read -r severity id message <<<"$finding"; printf -- '- **%s** ' "$severity"; printf '`%s`: %s\n' "$id" "$message"; done
   echo
   echo "## Running services"
-  printf '```text\n%s\n```\n' "$services"
+  printf '%s\n%s\n%s\n' '```text' "$services" '```'
   echo
   echo "## Docker containers"
-  printf '```text\n%s\n```\n' "$containers"
+  printf '%s\n%s\n%s\n' '```text' "$containers" '```'
   echo
   echo "## Listening ports"
-  printf '```text\n%s\n```\n' "$ports"
+  printf '%s\n%s\n%s\n' '```text' "$ports" '```'
 } | mask_ipv4 >"$tmp_md"
 
 {
