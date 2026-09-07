@@ -4,7 +4,8 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 script="$root/vps-inspector.sh"
 test -x "$script"
 "$script" --help | grep -q "read-only"
-grep -Fq 'curl -fsSL "$SCRIPT_URL" | sudo bash -s --' "$root/README.md"
+expected_pipe_command='curl -fsSL "$SCRIPT_URL" | sudo bash -s --'
+grep -Fq "$expected_pipe_command" "$root/README.md"
 if grep -Fq 'sudo bash <(' "$root/README.md"; then
   echo "README uses process substitution across sudo" >&2
   exit 1
