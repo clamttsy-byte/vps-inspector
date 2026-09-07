@@ -1,0 +1,5 @@
+reports/
+*.tmp
+.env
+*.key
+*.pem
