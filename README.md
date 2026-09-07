@@ -23,8 +23,8 @@ report before reviewing it.
 
 ## One-command run
 
-Use a pipe when elevating with `sudo`; process substitution such as
-`sudo bash <(curl ...)` can lose access to `/dev/fd/*` across the sudo boundary.
+Use a pipe when elevating with `sudo`; process substitution can lose access to
+`/dev/fd/*` across the sudo boundary.
 
 ```bash
 SCRIPT_URL="https://raw.githubusercontent.com/clamttsy-byte/vps-inspector/main/vps-inspector.sh"
