@@ -22,6 +22,11 @@ json="$(find "$tmp" -name '*.json' -print -quit)"
 test -s "$md"
 test -s "$json"
 grep -q '^# VPS Inspection Report' "$md"
+grep -A2 '^## Docker containers' "$md" | grep -Eq 'none|Docker unavailable|permission denied or daemon unavailable|[A-Za-z0-9_.-]+ \|'
+if grep -Eq '0\.0\.x\.x|127\.0\.x\.x' "$md"; then
+  echo "Non-public listener address was masked" >&2
+  exit 1
+fi
 python3 -m json.tool "$json" >/dev/null
 if grep -Eq 'BEGIN (RSA |OPENSSH )?PRIVATE KEY|gh[opsu]_[A-Za-z0-9]+' "$tmp"/*; then
   echo "Sensitive material found in report" >&2

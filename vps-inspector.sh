@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 SCHEMA="1"
 OUTPUT_DIR="./reports"
 LOOKUP_PUBLIC_IP=1
@@ -37,7 +37,28 @@ version_of() {
 }
 
 mask_ipv4() {
-  sed -E 's/([0-9]{1,3}\.[0-9]{1,3}\.)[0-9]{1,3}\.[0-9]{1,3}/\1x.x/g'
+  sed -E \
+    -e 's/0\.0\.0\.0/__VPS_ANY4__/g' \
+    -e 's/127\.([0-9]{1,3}\.){2}[0-9]{1,3}/__VPS_LOOP4__/g' \
+    -e 's/([0-9]{1,3}\.[0-9]{1,3}\.)[0-9]{1,3}\.[0-9]{1,3}/\1x.x/g' \
+    -e 's/__VPS_ANY4__/0.0.0.0/g' \
+    -e 's/__VPS_LOOP4__/127.0.0.1/g'
+}
+
+collect_docker_containers() {
+  if ! command -v docker >/dev/null 2>&1; then
+    printf 'Docker unavailable'
+    return
+  fi
+
+  local result
+  if ! result="$(docker ps -a --format '{{.Names}} | {{.Status}} | {{.Ports}}' 2>/dev/null)"; then
+    printf 'permission denied or daemon unavailable'
+  elif [[ -z "$result" ]]; then
+    printf 'none'
+  else
+    printf '%s' "$result"
+  fi
 }
 
 json_escape() {
@@ -64,7 +85,7 @@ nginx_v="$(command -v nginx >/dev/null 2>&1 && command_text installed nginx -v |
 time_sync="$(command_text unknown timedatectl show -p NTPSynchronized --value)"
 services="$(command_text unavailable systemctl --type=service --state=running --no-pager --no-legend)"
 ports="$(command_text unavailable ss -lntup)"
-containers="$(command -v docker >/dev/null 2>&1 && command_text unavailable docker ps -a --format '{{.Names}} | {{.Status}} | {{.Ports}}' || printf 'Docker unavailable')"
+containers="$(collect_docker_containers)"
 nezha_count="$(pgrep -fc '/opt/nezha/agent/nezha-agent' 2>/dev/null || true)"
 nezha_count="${nezha_count:-0}"
 firewall_policy="$(command_text unavailable sh -c "nft list ruleset 2>/dev/null | awk '/hook input/ {print; exit}'")"
