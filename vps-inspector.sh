@@ -112,7 +112,13 @@ trap 'rm -f "$tmp_md" "$tmp_json"' EXIT
   printf -- '- Git: %s\n- Docker: %s\n- Compose: %s\n- Caddy: %s\n- Nginx: %s\n' "$git_v" "$docker_v" "$compose_v" "$caddy_v" "$nginx_v"
   echo
   echo "## Findings"
-  for finding in "${findings[@]}"; do IFS='|' read -r severity id message <<<"$finding"; printf -- '- **%s** ' "$severity"; printf '`%s`: %s\n' "$id" "$message"; done
+  for finding in "${findings[@]}"; do
+    IFS='|' read -r severity id message <<<"$finding"
+    printf -- '- **%s** ' "$severity"
+    # Literal backticks are intentional Markdown delimiters, not shell expansion.
+    # shellcheck disable=SC2016
+    printf '`%s`: %s\n' "$id" "$message"
+  done
   echo
   echo "## Running services"
   printf '%s\n%s\n%s\n' '```text' "$services" '```'
